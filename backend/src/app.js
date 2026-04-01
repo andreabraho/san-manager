@@ -14,8 +14,18 @@ const app = express();
 
 // In production CLIENT_URL must be set; if missing, deny all cross-origin requests
 // rather than accidentally allowing every origin.
-const corsOrigin = process.env.CLIENT_URL || false;
-app.use(cors({ origin: corsOrigin, credentials: true }));
+const allowedOrigins = process.env.CLIENT_URL
+  ? process.env.CLIENT_URL.split(',').map((o) => o.trim())
+  : [];
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl, server-to-server)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+}));
 
 // ── Security headers ─────────────────────────────────────────────────────────
 // Applied before any route handler so every response carries these headers.
