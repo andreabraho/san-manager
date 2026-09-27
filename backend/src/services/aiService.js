@@ -2,6 +2,9 @@ const Groq = require('groq-sdk');
 
 const getClient = () => new Groq({ apiKey: process.env.GROQ_API_KEY });
 
+// Groq retires models periodically — override with GROQ_MODEL without a code change.
+const MODEL = process.env.GROQ_MODEL || 'openai/gpt-oss-20b';
+
 const chatWithKnowledge = async (knowledge, question) => {
   // Do NOT log any portion of the API key — even a prefix leaks entropy.
   // Log only whether the key is configured so the server owner can diagnose
@@ -9,8 +12,9 @@ const chatWithKnowledge = async (knowledge, question) => {
   console.log('[aiService] GROQ_API_KEY at call time:', process.env.GROQ_API_KEY ? 'SET' : 'MISSING');
   const client = getClient();
   const completion = await client.chat.completions.create({
-    model: 'llama-3.1-8b-instant',
-    max_tokens: 512,
+    model: MODEL,
+    max_tokens: 1024,
+    reasoning_effort: 'low',
     messages: [
       {
         role: 'system',
